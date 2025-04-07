@@ -1,5 +1,5 @@
 WS80 ECOWITT , DP1000 FROGGIT , WS5000 AMBIENT WEATHER....buy me a beer to get the tx uart signal😀
-- normal start up on ESP-NOW 
+- normal start up only ESP-NOW 
 - to activate receiver mqtt push boot and hold rst button for 2 seconds
 
 
