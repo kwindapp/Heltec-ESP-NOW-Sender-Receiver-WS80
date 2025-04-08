@@ -3,70 +3,76 @@
 #include <WiFi.h>
 #include <esp_now.h>
 
-// Display settings
+// ==== OLED Display Settings ====
 #define DISPLAY_I2C_PIN_RST 16
 #define ESP_SDA_PIN 4
 #define ESP_SCL_PIN 15
 #define DISPLAY_I2C_ADDR 0x3C
-
-// Setup OLED display
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, DISPLAY_I2C_PIN_RST, ESP_SCL_PIN, ESP_SDA_PIN);
 
-// Serial communication settings
-HardwareSerial mySerial(2);  // Use UART2 for serial communication
-#define MY_SERIAL_RX_PIN 12   // Change this to match your wiring
-#define MY_SERIAL_TX_PIN 13   // Change this to match your wiring
+// ==== Serial Communication Settings ====
+HardwareSerial mySerial(2);  // Use UART2
+#define MY_SERIAL_RX_PIN 12
+#define MY_SERIAL_TX_PIN 13
 
-// Structure for ESP-NOW data transmission
+// ==== ESP-NOW Data Structure ====
 typedef struct __attribute__((packed)) struct_message {
   int windDir;
   float windSpeed;
   float windGust;
   float temperature;
   float humidity;
-  float batVoltage; // Add battery voltage field
+  float batVoltage;
 } struct_message;
 
 struct_message dataToSend;
 
-// MAC address of the receiver ESP32
-uint8_t receiverMAC[] = {0x3C, 0x71, 0xBF, 0xAB, 0x5B, 0x78};
+// ==== MAC Addresses of Receivers ====
+uint8_t receiverMAC1[] = {0x3C, 0x71, 0xBF, 0xAB, 0x5B, 0x78};  // Receiver 1
+uint8_t receiverMAC2[] = {0x84, 0xFC, 0xE6, 0x6C, 0xCA, 0x40};  // Receiver 2 (ePaper)
 
-// Serial buffer
+// ==== Serial Buffer ====
 String serialBuffer = "";
 
 void setup() {
   Serial.begin(115200);
-  mySerial.begin(115200, SERIAL_8N1, MY_SERIAL_RX_PIN, MY_SERIAL_TX_PIN); // Initialize mySerial
-  
+  mySerial.begin(115200, SERIAL_8N1, MY_SERIAL_RX_PIN, MY_SERIAL_TX_PIN);
+
+  // WiFi Init
   WiFi.mode(WIFI_STA);
-  Serial.println("WiFi initialized in station mode");
+  Serial.println("📡 WiFi initialized in station mode");
 
-  // Initialize ESP-NOW
+  // ESP-NOW Init
   if (esp_now_init() != ESP_OK) {
-    Serial.println("ESP-NOW initialization failed");
+    Serial.println("❌ ESP-NOW initialization failed");
     return;
   }
 
-  // Add the receiver as a peer
-  esp_now_peer_info_t peerInfo;
-  memset(&peerInfo, 0, sizeof(peerInfo));
-  memcpy(peerInfo.peer_addr, receiverMAC, 6);
-  peerInfo.channel = 0;
-  peerInfo.encrypt = false;
-
-  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-    Serial.println("Failed to add peer");
-    return;
+  // Add receiver 1
+  esp_now_peer_info_t peerInfo1 = {};
+  memcpy(peerInfo1.peer_addr, receiverMAC1, 6);
+  peerInfo1.channel = 0;
+  peerInfo1.encrypt = false;
+  if (esp_now_add_peer(&peerInfo1) != ESP_OK) {
+    Serial.println("❌ Failed to add peer 1");
+  } else {
+    Serial.println("✅ Peer 1 added");
   }
 
-  Serial.println("ESP-NOW Peer Added Successfully");
+  // Add receiver 2
+  esp_now_peer_info_t peerInfo2 = {};
+  memcpy(peerInfo2.peer_addr, receiverMAC2, 6);
+  peerInfo2.channel = 0;
+  peerInfo2.encrypt = false;
+  if (esp_now_add_peer(&peerInfo2) != ESP_OK) {
+    Serial.println("❌ Failed to add peer 2");
+  } else {
+    Serial.println("✅ Peer 2 added");
+  }
 
-  // Initialize OLED display
+  // OLED Init
   Wire.begin(ESP_SDA_PIN, ESP_SCL_PIN);
   u8g2.begin();
-
-  // Display startup message
   u8g2.clearBuffer();
   u8g2.setFont(u8g2_font_6x10_tf);
   u8g2.drawStr(10, 20, "ESP32 Sender");
@@ -75,65 +81,50 @@ void setup() {
 }
 
 void loop() {
-  // Read incoming serial data
   while (mySerial.available()) {
     char incomingByte = mySerial.read();
     serialBuffer += incomingByte;
   }
 
-  // Process data if we have a complete message
   if (serialBuffer.indexOf("SHT30") != -1) {
-    Serial.println("\nValid data received:");
+    Serial.println("\n✅ Valid data received:");
     Serial.println(serialBuffer);
-    
-    parseData(serialBuffer);  // Extract wind and environmental data
-    serialBuffer = "";  // Clear buffer after processing
 
-    // Send data via ESP-NOW
+    parseData(serialBuffer);
+    serialBuffer = "";
+
     sendESPNowData();
-
-    // Display data on OLED
     displayData();
   }
 
-  delay(500); // Small delay to avoid overloading
+  delay(500);
 }
 
-// Function to send parsed data via ESP-NOW
+// ==== Send ESP-NOW Data to All Receivers ====
 void sendESPNowData() {
-  Serial.println("Sending data...");
-  esp_err_t result = esp_now_send(receiverMAC, (uint8_t *)&dataToSend, sizeof(dataToSend));
-  if (result == ESP_OK) {
-    Serial.println("✅ Data sent successfully!");
-  } else {
-    Serial.println("❌ Failed to send data.");
-  }
+  Serial.println("\n📤 Sending data via ESP-NOW...");
+
+  esp_err_t result;
+
+  result = esp_now_send(receiverMAC1, (uint8_t *)&dataToSend, sizeof(dataToSend));
+  Serial.println(result == ESP_OK ? "✅ Data sent to receiver 1" : "❌ Failed to send to receiver 1");
+
+  result = esp_now_send(receiverMAC2, (uint8_t *)&dataToSend, sizeof(dataToSend));
+  Serial.println(result == ESP_OK ? "✅ Data sent to receiver 2" : "❌ Failed to send to receiver 2");
 }
 
-// Function to parse serial data and extract values
+// ==== Parse Incoming Serial Data ====
 void parseData(String data) {
   data.trim();
 
-  if (data.indexOf("WindDir") != -1) {
-    dataToSend.windDir = getValue(data, "WindDir");
-  }
-  if (data.indexOf("WindSpeed") != -1) {
-    dataToSend.windSpeed = getValue(data, "WindSpeed") * 1.94384;  // Convert m/s to knots
-  }
-  if (data.indexOf("WindGust") != -1) {
-    dataToSend.windGust = getValue(data, "WindGust") * 1.94384;  // Convert m/s to knots
-  }
-  if (data.indexOf("Temperature") != -1) {
-    dataToSend.temperature = getValue(data, "Temperature");
-  }
-  if (data.indexOf("Humi") != -1) {
-    dataToSend.humidity = getValue(data, "Humi");
-  }
-  if (data.indexOf("BatVoltage") != -1) {
-    dataToSend.batVoltage = getValue(data, "BatVoltage"); // Parse BatVoltage
-  }
+  if (data.indexOf("WindDir") != -1) dataToSend.windDir = getValue(data, "WindDir");
+  if (data.indexOf("WindSpeed") != -1) dataToSend.windSpeed = getValue(data, "WindSpeed") * 1.94384;
+  if (data.indexOf("WindGust") != -1) dataToSend.windGust = getValue(data, "WindGust") * 1.94384;
+  if (data.indexOf("Temperature") != -1) dataToSend.temperature = getValue(data, "Temperature");
+  if (data.indexOf("Humi") != -1) dataToSend.humidity = getValue(data, "Humi");
+  if (data.indexOf("BatVoltage") != -1) dataToSend.batVoltage = getValue(data, "BatVoltage");
 
-  // Print parsed data to serial
+  // Print parsed values
   Serial.println("\n📊 Parsed Data:");
   Serial.printf("🌬 WindDir: %d°\n", dataToSend.windDir);
   Serial.printf("💨 WindSpeed: %.1f knots\n", dataToSend.windSpeed);
@@ -143,7 +134,7 @@ void parseData(String data) {
   Serial.printf("🔋 BatVoltage: %.2f V\n", dataToSend.batVoltage);
 }
 
-// Helper function to extract values from the serial data
+// ==== Extract Values from Serial String ====
 float getValue(String data, String key) {
   int keyPos = data.indexOf(key);
   if (keyPos != -1) {
@@ -156,7 +147,7 @@ float getValue(String data, String key) {
   return 0.0;
 }
 
-// Function to display data on OLED
+// ==== Display Parsed Data on OLED ====
 void displayData() {
   Serial.println("\n🖥 Displaying data on OLED...");
 
@@ -169,11 +160,4 @@ void displayData() {
   u8g2.drawStr(0, 50, ("Humi.  : " + String(dataToSend.humidity) + "  %").c_str());
   u8g2.drawStr(0, 60, ("BatVolt: " + String(dataToSend.batVoltage) + "   V").c_str());
   u8g2.sendBuffer();
-}
-
-// Function to read the battery voltage
-float readBatteryVoltage() {
-  int adcValue = analogRead(35);  // Read the internal ADC pin (e.g., GPIO 35 for the battery)
-  float voltage = (adcValue / 4095.0) * 3.3 * 2; // Calculate battery voltage (adjust for your board's circuit)
-  return voltage;
 }
