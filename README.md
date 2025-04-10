@@ -16,4 +16,5 @@ remove the solar cover careful ......remove R4 and ad R10K according pic.
 
 E-Paper Project -Receiver direct ESP-Now and Websocket Data Receive
 
-![ESP-NOW-WS80-E-Paper Lilygo](https://github.com/user-attachments/assets/52191208-6227-45fd-bc33-8ea569f518bd)
+
+![IMG_0505](https://github.com/user-attachments/assets/aa75a5ca-02ed-4b14-b6f9-e8a88ad73a12)
