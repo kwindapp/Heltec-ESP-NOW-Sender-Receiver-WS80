@@ -17,5 +17,4 @@ remove the solar cover careful ......remove R4 and ad R10K according pic.
 E-Paper Project -Receiver direct ESP-Now and Websocket Data Receive
 
 
-
 ![Uploading IMG_0507.JPG…]()
