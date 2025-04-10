@@ -11,4 +11,6 @@ Remote place conversion WS80 UART tx in the Domenican Republic😀😀 i found t
 
 Remove solar cover careful ......remove R4 and ad R10K according pic.
 ![IMG_0436](https://github.com/user-attachments/assets/79319afd-0209-4e28-aa9c-ba1b9e283c1f)
-![IMG_0462](https://github.com/user-attachments/assets/06471d15-2f28-40f9-b3c9-b66534952320)
+
+
+![ESP-NOW-WS80-E-Paper Lilygo](https://github.com/user-attachments/assets/52191208-6227-45fd-bc33-8ea569f518bd)
