@@ -18,4 +18,4 @@ E-Paper Project -Receiver direct ESP-Now and Websocket Data Receive
 
 
 
-![IMG_0507](https://github.com/user-attachments/assets/6c897508-1e66-483c-ab7a-5528af7f6270)
+![WhatsApp Image 2025-04-10 at 21 28 26](https://github.com/user-attachments/assets/47d329e6-ca7d-4546-ac68-d5c05b78a93f)
