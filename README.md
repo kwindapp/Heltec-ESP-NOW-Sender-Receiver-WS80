@@ -10,6 +10,7 @@ WS80 ECOWITT , DP1000 FROGGIT , WS5000 AMBIENT WEATHER....buy me a beer to get t
 
 Fine Offset ,Ecowitt,Froggit ,etc....6-1 ultrasonic
 remove the solar cover careful ......remove R4 and ad R10K according pic.
+<img width="138" alt="Screenshot 2025-04-17 at 03 08 28" src="https://github.com/user-attachments/assets/a0f3e474-587b-40ba-bc65-cebaaaabc5d9" />
 
 ![IMG_0436](https://github.com/user-attachments/assets/79319afd-0209-4e28-aa9c-ba1b9e283c1f)
 
